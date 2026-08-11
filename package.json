@@ -1,0 +1,64 @@
+{
+  "name": "tmp-muhely-hub",
+  "version": "2.1.0",
+  "description": "TMP Műhely Hub - raktár, javítás, rendelések, kölcsönzés, árajánlat, TO-DO",
+  "main": "main.js",
+  "author": "TMP Audio",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder",
+    "dist:win": "electron-builder --win",
+    "dist:mac": "electron-builder --mac",
+    "dist:linux": "electron-builder --linux"
+  },
+  "devDependencies": {
+    "electron": "^28.3.3",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "hu.tmpaudio.muhelyhub",
+    "productName": "TMP Muhely Hub",
+    "copyright": "TMP Audio",
+    "directories": {
+      "output": "kiadas",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "app/**/*",
+      "build/icon.*"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "TMP Muhely Hub",
+      "installerLanguages": ["hu_HU"],
+      "language": "1038"
+    },
+    "mac": {
+      "target": ["dmg"],
+      "icon": "build/icon.png",
+      "category": "public.app-category.business"
+    },
+    "linux": {
+      "target": ["AppImage"],
+      "icon": "build/icon.png",
+      "category": "Office"
+    }
+  }
+}

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8" />
+  <title>TMP Műhely Hub</title>
+  <link rel="stylesheet" href="src/styles.css" />
+  <script src="vendor/firebase-app-compat.js"></script>
+  <script src="vendor/firebase-database-compat.js"></script>
+</head>
+<body>
+  <header class="top-bar">
+    <button id="back-btn" class="back-btn">← Vissza</button>
+    <div id="brand-btn" class="brand" style="cursor:pointer;">TMP Műhely Hub</div>
+    <div class="spacer"></div>
+    <div class="status-area">
+      <span id="conn-dot" class="conn-dot"></span>
+      <span id="conn-label">Kapcsolódás…</span>
+      <span id="app-version" class="app-version"></span>
+    </div>
+  </header>
+
+  <main id="main-content" class="main-content"></main>
+
+  <script src="src/lib/firebase-data.js"></script>
+  <script src="src/modules/raktar.js"></script>
+  <script src="src/modules/javitas.js"></script>
+  <script src="src/modules/rendelesek.js"></script>
+  <script src="src/modules/kolcsonzes.js"></script>
+  <script src="src/modules/arajanlat.js"></script>
+  <script src="src/modules/todo.js"></script>
+  <script src="src/modules/dokumentumok.js"></script>
+  <script src="src/modules/jatek.js"></script>
+  <script src="src/modules/logo-sprite.js"></script>
+  <script src="src/modules/indito.js"></script>
+  <script src="src/modules/fater-sprite.js"></script>
+  <script src="src/modules/kigyo.js"></script>
+  <script src="src/modules/jatek-menu.js"></script>
+  <script src="src/modules/mentesek.js"></script>
+  <script src="src/app.js"></script>
+</body>
+</html>
