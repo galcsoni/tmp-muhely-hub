@@ -146,12 +146,14 @@
         activeCategoryId = el.dataset.openCat;
         screen = 'detail';
         render();
+        window.AppAnim?.ujra();
       });
     });
     root.querySelector('[data-open-missing]')?.addEventListener('click', () => {
       activeCategoryId = '__missing__';
       screen = 'detail';
       render();
+      window.AppAnim?.ujra();
     });
   }
 
@@ -435,6 +437,7 @@
       window.DataLayer.raktarDeleteCategory(activeCategoryId);
       screen = 'list';
       render();
+      window.AppAnim?.ujra();
     });
     root.querySelector('[data-action="add-part"]')?.addEventListener('click', () => {
       window.DataLayer.raktarAddPart(activeCategoryId, { name: 'Új alkatrész', price: 0, qty_van: 0, qty_kell: 0 })
@@ -495,7 +498,7 @@
   window.ModuleNav = window.ModuleNav || {};
   window.ModuleNav.raktar = {
     isDetail: () => screen === 'detail',
-    goToList: () => { screen = 'list'; render(); },
+    goToList: () => { screen = 'list'; render(); window.AppAnim?.ujra(); },
     getDashboardStat
   };
 })();

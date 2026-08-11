@@ -106,6 +106,7 @@
         activeStatus = el.dataset.open;
         screen = 'detail';
         render();
+        window.AppAnim?.ujra();
       });
     });
   }
@@ -263,7 +264,7 @@ window.JavitasModule = { init: initJavitasModule, getFigyelmeztetes };
   window.ModuleNav = window.ModuleNav || {};
   window.ModuleNav.javitas = {
     isDetail: () => screen === 'detail',
-    goToList: () => { screen = 'list'; render(); },
+    goToList: () => { screen = 'list'; render(); window.AppAnim?.ujra(); },
     getDashboardStat
   };
 })();

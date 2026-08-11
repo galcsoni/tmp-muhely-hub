@@ -135,6 +135,7 @@
         activeSectionId = el.dataset.open;
         screen = 'detail';
         render();
+        window.AppAnim?.ujra();
       });
     });
   }
@@ -311,6 +312,7 @@
       window.DataLayer.todoSectionDelete(activeSectionId);
       screen = 'list';
       render();
+      window.AppAnim?.ujra();
     });
     root.querySelectorAll('[data-open-task]').forEach((el) => {
       el.addEventListener('click', () => openTaskModal(el.dataset.openTask));
@@ -384,7 +386,7 @@ window.TodoModule = { init, getFigyelmeztetes };
   window.ModuleNav = window.ModuleNav || {};
   window.ModuleNav.todo = {
     isDetail: () => screen === 'detail',
-    goToList: () => { screen = 'list'; render(); },
+    goToList: () => { screen = 'list'; render(); window.AppAnim?.ujra(); },
     getDashboardStat
   };
 })();

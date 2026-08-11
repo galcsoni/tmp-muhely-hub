@@ -165,6 +165,7 @@
         activeTipus = el.dataset.openTipus;
         screen = 'tipus';
         render();
+        window.AppAnim?.ujra();
       });
     });
   }
@@ -241,6 +242,7 @@
         formState = q;
         screen = 'editor';
         render();
+        window.AppAnim?.ujra();
       });
     });
     root.querySelectorAll('[data-quick-ugyfel]').forEach((el) => {
@@ -258,6 +260,7 @@
           formState = q;
           screen = 'editor';
           render();
+          window.AppAnim?.ujra();
         });
       });
     });
@@ -269,6 +272,7 @@
         if (!Array.isArray(formState.jegyzetek)) formState.jegyzetek = [];
         screen = 'editor';
         render();
+        window.AppAnim?.ujra();
       });
     });
   }
@@ -644,6 +648,7 @@
       screen = 'tipus';
       formState = null;
       render();
+      window.AppAnim?.ujra();
     });
 
     document.getElementById('aj-pick-ugyfel')?.addEventListener('change', (e) => {
@@ -775,6 +780,7 @@
       if (screen === 'editor') { screen = 'tipus'; formState = null; }
       else { screen = 'list'; activeTipus = null; }
       render();
+      window.AppAnim?.ujra();
     },
     getDashboardStat
   };

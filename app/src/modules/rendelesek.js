@@ -79,6 +79,7 @@
         activeStatus = el.dataset.open;
         screen = 'detail';
         render();
+        window.AppAnim?.ujra();
       });
     });
   }
@@ -221,7 +222,7 @@
   window.ModuleNav = window.ModuleNav || {};
   window.ModuleNav.rendelesek = {
     isDetail: () => screen === 'detail',
-    goToList: () => { screen = 'list'; render(); },
+    goToList: () => { screen = 'list'; render(); window.AppAnim?.ujra(); },
     getDashboardStat
   };
 })();

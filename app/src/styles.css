@@ -981,3 +981,67 @@ body.indul { overflow: hidden; }
   .view.belep * { animation: none !important; }
   .module-gyuru-rajz { stroke-dashoffset: 0; }
 }
+
+/* ── Frissítés-értesítő ────────────────────────────────────────────────── */
+#frissites-doboz {
+  position: fixed; right: 22px; bottom: 22px; z-index: 11000;
+  max-width: 370px;
+  opacity: 0; transform: translateY(24px) scale(0.97);
+  transition: opacity 0.4s cubic-bezier(0.16,0.9,0.3,1), transform 0.4s cubic-bezier(0.16,0.9,0.3,1);
+  pointer-events: none;
+}
+#frissites-doboz.lathato { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
+
+.frissites-kartya {
+  display: flex; gap: 15px; align-items: flex-start;
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: 16px;
+  padding: 18px 20px;
+  box-shadow: 0 18px 44px rgba(42, 37, 32, 0.22);
+}
+.frissites-logo { width: 52px; height: auto; flex: none; margin-top: 2px; opacity: 0.9; }
+.frissites-tartalom { flex: 1; min-width: 0; }
+
+.frissites-cim {
+  font-family: var(--font-display); font-weight: 700; font-size: 19px;
+  color: var(--ink); margin-bottom: 3px;
+}
+.frissites-alcim { font-size: 13px; color: var(--text-secondary); }
+.frissites-halvany { color: var(--text-dim); }
+.frissites-info {
+  font-size: 11.5px; color: var(--text-dim); line-height: 1.6; margin: 9px 0 0;
+}
+
+.frissites-gombok { display: flex; gap: 8px; margin-top: 14px; }
+.frissites-fo {
+  background: var(--ink); color: var(--bg); border: none;
+  border-radius: 22px; padding: 9px 20px;
+  font-family: var(--font-sans); font-size: 13px; font-weight: 500;
+  cursor: pointer; transition: transform 0.16s ease;
+}
+.frissites-fo:hover { transform: translateY(-2px); }
+.frissites-mellek {
+  background: transparent; color: var(--text-dim);
+  border: 1px solid var(--border); border-radius: 22px; padding: 9px 16px;
+  font-family: var(--font-sans); font-size: 13px; cursor: pointer;
+  transition: border-color 0.16s ease, color 0.16s ease;
+}
+.frissites-mellek:hover { border-color: var(--border-light); color: var(--text); }
+
+.frissites-sav {
+  margin-top: 12px; height: 5px; background: var(--bg-card-hover);
+  border-radius: 4px; overflow: hidden;
+}
+.frissites-sav span {
+  display: block; height: 100%; background: var(--accent);
+  border-radius: 4px; transition: width 0.3s ease;
+}
+.frissites-sav.hataroz span {
+  width: 40% !important;
+  animation: frissites-csuszik 1.2s ease-in-out infinite;
+}
+@keyframes frissites-csuszik {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(250%); }
+}

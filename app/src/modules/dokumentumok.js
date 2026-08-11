@@ -88,6 +88,7 @@
         activeKatId = el.dataset.open;
         screen = 'detail';
         render();
+        window.AppAnim?.ujra();
       });
     });
     bindDocTiles(root);
@@ -243,6 +244,7 @@
       window.DataLayer.dokKategoriaDelete(activeKatId);
       screen = 'list';
       render();
+      window.AppAnim?.ujra();
     });
     bindDocTiles(root);
   }
@@ -276,7 +278,7 @@
   window.ModuleNav = window.ModuleNav || {};
   window.ModuleNav.dokumentumok = {
     isDetail: () => screen === 'detail',
-    goToList: () => { screen = 'list'; render(); },
+    goToList: () => { screen = 'list'; render(); window.AppAnim?.ujra(); },
     getDashboardStat
   };
 })();

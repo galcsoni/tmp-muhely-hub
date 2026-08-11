@@ -7,6 +7,7 @@
 
 const { app, BrowserWindow, shell, Menu, dialog, ipcMain } = require('electron');
 const os = require('os');
+const frissites = require('./frissites');
 const path = require('path');
 const fs = require('fs');
 
@@ -125,7 +126,11 @@ function ablakLetrehoz() {
   mainWindow.loadFile(path.join(__dirname, 'app', 'index.html'));
 
   // Csak akkor mutatjuk, ha már kirajzolódott - így nincs fehér villanás
-  mainWindow.once('ready-to-show', () => mainWindow.show());
+  mainWindow.once('ready-to-show', () => {
+    mainWindow.show();
+    frissites.beallit(mainWindow);
+    frissites.ellenorizIndulaskor();
+  });
 
   // A külső linkek az alapértelmezett böngészőben nyíljanak, ne az appban
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
@@ -185,13 +190,18 @@ function menuLetrehoz() {
       label: 'Súgó',
       submenu: [
         {
+          label: 'Frissítés keresése…',
+          click: () => frissites.ellenorizKezzel()
+        },
+        { type: 'separator' },
+        {
           label: 'Névjegy',
           click: () => {
             dialog.showMessageBox(mainWindow, {
               type: 'info',
               title: 'TMP Műhely Hub',
               message: 'TMP Műhely Hub',
-              detail: `Verzió: ${app.getVersion()}\nElectron: ${process.versions.electron}\n\nAz adatok a Firebase felhőben tárolódnak,\nés minden gépen azonnal frissülnek.`,
+              detail: `Verzió: ${app.getVersion()}\nElectron: ${process.versions.electron}\n\nAz adatok a Firebase felhőben tárolódnak,\nés minden gépen azonnal frissülnek.\n\nA program automatikusan keres frissítést induláskor.`,
               buttons: ['Rendben']
             });
           }

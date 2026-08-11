@@ -136,6 +136,11 @@
     el._belepTimer = setTimeout(() => el.classList.remove('belep'), 1100);
   }
 
+  // A modulok is hívhatják, amikor almenübe lépnek vagy visszajönnek
+  window.AppAnim = {
+    ujra: (viewId) => belepoAnimacio(viewId || currentView)
+  };
+
   function navigateTo(viewId) {
     const valtas = currentView !== viewId;
     currentView = viewId;
