@@ -203,6 +203,18 @@
     else renderListScreen(root);
   }
 
+  function getDashboardInfo() {
+    const all = Object.values(data);
+    if (!all.length) return null;
+    const active = all.filter((r) => r.status !== 'Minden kész' && r.status !== 'NEM KELLETT NEKI').length;
+    return {
+      szam: all.length,
+      egyseg: 'rendelés',
+      mellek: active > 0 ? `${active} még nyitott` : 'mind lezárva',
+      figyelem: null
+    };
+  }
+
   function getDashboardStat() {
     const all = Object.values(data);
     if (all.length === 0) return '<span class="dash-card-stat muted">még nincs adat</span>';
@@ -213,7 +225,7 @@
   function init() {
     window.DataLayer.watchRendelesek((d) => {
       data = d || {};
-      render();
+      window.RenderGuard.rajzol(render, 'rendelesek');
       window.DashboardStats?.refresh();
     });
   }
@@ -223,7 +235,8 @@
   window.ModuleNav.rendelesek = {
     isDetail: () => screen === 'detail',
     goToList: () => { screen = 'list'; render(); window.AppAnim?.ujra(); },
-    getDashboardStat
+    getDashboardStat,
+    getDashboardInfo
   };
 })();
 

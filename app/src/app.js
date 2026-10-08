@@ -1,13 +1,31 @@
 (function () {
   const MODULES = [
-    { id: 'raktar', label: 'Raktár', icon: '📦', ready: true, szin: '#9C6B3F' },
-    { id: 'javitas', label: 'Javítás', icon: '🛠️', ready: true, szin: '#B0672E' },
-    { id: 'kolcsonzes', label: 'Kölcsönzés', icon: '📋', ready: true, szin: '#5B7F99' },
-    { id: 'arajanlat', label: 'Árajánlat', icon: '🧾', ready: true, szin: '#7A5B8F' },
-    { id: 'rendelesek', label: 'Rendelések', icon: '📊', ready: true, szin: '#6B7A63' },
-    { id: 'todo', label: 'TO-DO', icon: '✅', ready: true, szin: '#6B8F5E' },
-    { id: 'dokumentumok', label: 'Dokumentumok', icon: '📂', ready: true, szin: '#9C6B3F' },
-    { id: 'mentesek', label: 'Mentések', icon: '💾', ready: true, szin: '#B0453A' }
+    { id: 'raktar', label: 'Raktár', icon: '📦', ready: true, szin: '#9C6B3F',
+      alcim: 'Alkatrészek és készlet', csoport: 'muhely' },
+    { id: 'javitas', label: 'Javítás', icon: '🛠️', ready: true, szin: '#B0672E',
+      alcim: 'Szervizben lévő készülékek', csoport: 'muhely' },
+    { id: 'katalogus', label: 'Katalógus', icon: '🔧', ready: true, szin: '#7E5430',
+      alcim: 'Termékek és összeszerelés', csoport: 'muhely' },
+
+    { id: 'arajanlat', label: 'Árajánlat', icon: '🧾', ready: true, szin: '#7A5B8F',
+      alcim: 'Ajánlatok készítése', csoport: 'uzlet' },
+    { id: 'rendelesek', label: 'Rendelések', icon: '📊', ready: true, szin: '#6B7A63',
+      alcim: 'Beszerzés nyomon követése', csoport: 'uzlet' },
+    { id: 'kolcsonzes', label: 'Kölcsönzés', icon: '📋', ready: true, szin: '#5B7F99',
+      alcim: 'Kiadott eszközök', csoport: 'uzlet' },
+
+    { id: 'todo', label: 'TO-DO', icon: '✅', ready: true, szin: '#6B8F5E',
+      alcim: 'Teendők és ötletek', csoport: 'szervezes' },
+    { id: 'dokumentumok', label: 'Dokumentumok', icon: '📂', ready: true, szin: '#9C6B3F',
+      alcim: 'Linkek és jegyzetek', csoport: 'szervezes' },
+    { id: 'mentesek', label: 'Mentések', icon: '💾', ready: true, szin: '#B0453A',
+      alcim: 'Biztonsági mentés', csoport: 'szervezes' }
+  ];
+
+  const CSOPORTOK = [
+    { id: 'muhely', cim: 'Műhely' },
+    { id: 'uzlet', cim: 'Üzlet' },
+    { id: 'szervezes', cim: 'Szervezés' }
   ];
 
   let currentView = 'kezdolap';
@@ -102,24 +120,79 @@
     document.getElementById('easter-egg')?.addEventListener('click', () => window.JatekMenu?.open());
   }
 
+  // A modulkártya alakja a TMP logó kontúrja. A formát SVG rajzolja, mert
+  // a lecsapott alj miatt sima CSS-kerettel nem lenne megoldható. Minden
+  // kártya azonos arányú (778:492), így a forma mindenhol egyforma.
+  const PAJZS_PATH =
+    'M 54,6 H 724 Q 772,6 772,54 V 348 L 404,482 Q 389,489 374,482 L 6,348 V 54 Q 6,6 54,6 Z';
+
+  function dashKartya(m) {
+    const nav = m.ready ? window.ModuleNav[m.id] : null;
+    const betoltve = !m.ready || !!nav;
+    const info = nav && nav.getDashboardInfo ? nav.getDashboardInfo() : null;
+    const tiltott = !m.ready || !betoltve;
+
+    let torzs;
+    if (!m.ready) {
+      torzs = '<span class="pk-ures">hamarosan</span>';
+    } else if (!nav) {
+      torzs = '<span class="pk-ures">nincs betöltve</span>';
+    } else if (info) {
+      torzs = `
+        <span class="pk-ertek">
+          <span class="pk-szam">${info.szam}</span>
+          <span class="pk-egyseg">${info.egyseg}</span>
+        </span>
+        ${info.mellek ? `<span class="pk-mellek">${info.mellek}</span>` : ''}
+        ${info.figyelem ? `
+          <span class="pk-figyelem ${info.figyelem.suly}">
+            <span class="pk-pont"></span>${info.figyelem.szoveg}
+          </span>` : ''}
+      `;
+    } else if (nav.getDashboardStat) {
+      torzs = `<span class="pk-mellek">${nav.getDashboardStat()}</span>`;
+    } else {
+      torzs = '<span class="pk-ures">még nincs adat</span>';
+    }
+
+    return `
+      <button class="pajzs-kartya ${tiltott ? 'disabled' : ''}"
+              data-goto="${m.id}" style="--mszin:${m.szin};" ${tiltott ? 'disabled' : ''}>
+        <svg class="pk-alak" viewBox="0 0 778 492" preserveAspectRatio="none" aria-hidden="true">
+          <path d="${PAJZS_PATH}" />
+        </svg>
+        <span class="pk-tartalom">
+          <span class="pk-fejlec">
+            <span class="pk-ikon">${m.icon}</span>
+            <span class="pk-nevek">
+              <span class="pk-nev">${m.label}</span>
+              ${m.alcim ? `<span class="pk-alcim">${m.alcim}</span>` : ''}
+            </span>
+          </span>
+          ${torzs}
+        </span>
+      </button>
+    `;
+  }
+
   function renderDashboard() {
     const root = document.getElementById('view-dashboard');
-    root.innerHTML = `
-      <p class="dash-title">Válassz modult</p>
-      <div class="dash-grid">
-        ${MODULES.map((m) => `
-          <div class="dash-card ${m.ready ? '' : 'disabled'}" data-goto="${m.id}">
-            ${m.ready ? '' : '<span class="dash-card-soon">hamarosan</span>'}
-            <span class="dash-card-icon">${m.icon}</span>
-            <div class="dash-card-title">${m.label}</div>
-            ${m.ready && window.ModuleNav[m.id]
-              ? window.ModuleNav[m.id].getDashboardStat()
-              : '<span class="dash-card-stat muted">hamarosan</span>'}
+    // A csoport neve oldalt áll, a hozzá tartozó modulok mellette sorakoznak.
+    root.innerHTML = `<div class="dash-oldal">` + CSOPORTOK.map((cs) => {
+      const tagok = MODULES.filter((m) => m.csoport === cs.id);
+      if (!tagok.length) return '';
+      return `
+        <section class="dash-csoport">
+          <div class="dash-csoport-fej">
+            <h2 class="dash-csoport-cim">${cs.cim}</h2>
+            <span class="dash-csoport-vonal"></span>
           </div>
-        `).join('')}
-      </div>
-    `;
-    root.querySelectorAll('.dash-card:not(.disabled)').forEach((el) => {
+          <div class="dash-grid">${tagok.map(dashKartya).join('')}</div>
+        </section>
+      `;
+    }).join('') + `</div>`;
+
+    root.querySelectorAll('.pajzs-kartya:not(.disabled)').forEach((el) => {
       el.addEventListener('click', () => navigateTo(el.dataset.goto));
     });
   }
@@ -227,6 +300,62 @@
     return backdrop;
   }
 
+  // ── Saját beviteli és megerősítő ablakok ──────────────────────────────
+  // Az Electron nem támogatja a böngészős window.prompt()-ot: az asztali
+  // appban egyszerűen nem jelenik meg semmi. Ezért saját ablakot
+  // használunk, ami ráadásul a program kinézetéhez is illik.
+  //
+  // Használat:
+  //   const nev = await window.AppKerdes.szoveg({ cim: 'Termék neve' });
+  //   if (nev === null) return;        // mégse
+  function kerdesAblak({ cim, leiras, ertek, hely, gomb, tobbSoros, szam, kotelezo }) {
+    return new Promise((resolve) => {
+      const content = window.AppModal.open(`
+        <div class="kerdes-ablak">
+          <div class="kerdes-cim">${cim || 'Megadás'}</div>
+          ${leiras ? `<p class="kerdes-leiras">${leiras}</p>` : ''}
+          ${tobbSoros
+            ? `<textarea id="kerdes-mezo" class="note-input" rows="4"
+                 placeholder="${hely || ''}">${ertek || ''}</textarea>`
+            : `<input id="kerdes-mezo" class="cell-input" type="${szam ? 'number' : 'text'}"
+                 value="${ertek != null ? String(ertek).replace(/"/g, '&quot;') : ''}"
+                 placeholder="${hely || ''}" />`}
+          <div class="kerdes-gombok">
+            <button class="btn-primary" id="kerdes-ok" style="margin-top:0;">${gomb || 'Rendben'}</button>
+            <button class="btn-secondary" id="kerdes-megse" style="margin-top:0;">Mégse</button>
+          </div>
+        </div>
+      `);
+
+      const mezo = content.querySelector('#kerdes-mezo');
+      const kesz = (v) => { window.AppModal.close(); resolve(v); };
+
+      content.querySelector('#kerdes-ok').addEventListener('click', () => {
+        const v = mezo.value;
+        if (kotelezo && !String(v).trim()) { mezo.focus(); return; }
+        kesz(v);
+      });
+      content.querySelector('#kerdes-megse').addEventListener('click', () => kesz(null));
+
+      mezo.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !tobbSoros) { e.preventDefault(); content.querySelector('#kerdes-ok').click(); }
+        if (e.key === 'Escape') kesz(null);
+      });
+
+      setTimeout(() => { mezo.focus(); mezo.select?.(); }, 50);
+    });
+  }
+
+  window.AppKerdes = {
+    // Egy soros szöveg bekérése. null = mégse
+    szoveg: (opt) => kerdesAblak({ kotelezo: true, ...opt }),
+    // Nem kötelező szöveg (pl. megjegyzés): üres is elfogadható
+    szabadSzoveg: (opt) => kerdesAblak({ kotelezo: false, ...opt }),
+    // Szám bekérése
+    szam: (opt) => kerdesAblak({ szam: true, kotelezo: true, ...opt })
+      .then((v) => (v === null ? null : Number(v)))
+  };
+
   window.AppModal = {
     open(html) {
       const backdrop = ensureModalBackdrop();
@@ -253,6 +382,7 @@
     window.KolcsonzesModule.init();
     window.ArajanlatModule.init();
     window.TodoModule.init();
+    window.KatalogusModule.init();
     window.DokumentumokModule.init();
     window.MentesekModule.init();
 

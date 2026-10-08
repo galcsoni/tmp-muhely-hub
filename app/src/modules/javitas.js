@@ -112,6 +112,27 @@
   }
 
   // ── RÉSZLETNÉZET: kompakt kártyák, kattintásra popup nyílik ──────────
+  // A korábban már begépelt nevek összegyűjtése, hogy gépelés közben
+  // felajánlhassuk őket. Így nem kell kétszer ugyanazt leírni, és nem lesz
+  // háromféle írásmód ugyanarra a cégre.
+  function korabbiErtekek(mezo) {
+    const keszlet = new Set();
+    Object.values(javitasData).forEach((r) => {
+      const v = (r[mezo] || '').trim();
+      if (v) keszlet.add(v);
+    });
+    // Az árajánlatoknál mentett ügyfelek neveit is hozzávesszük
+    if (mezo === 'partner' && window.ArajanlatUgyfelNevek) {
+      window.ArajanlatUgyfelNevek().forEach((n) => { if (n) keszlet.add(n); });
+    }
+    return Array.from(keszlet).sort((a, b) => a.localeCompare(b, 'hu'));
+  }
+
+  function javaslatLista(id, mezo) {
+    return `<datalist id="${id}">${korabbiErtekek(mezo)
+      .map((v) => `<option value="${escapeHtml(v)}"></option>`).join('')}</datalist>`;
+  }
+
   function renderCompactCard(id, rec) {
     const st = normStatus(rec.status);
     const color = STATUS_COLORS[st] || 'var(--border-light)';
@@ -139,9 +160,11 @@
     const color = STATUS_COLORS[st] || 'var(--border-light)';
 
     const html = `
+      ${javaslatLista('jav-ugyfel-lista', 'partner')}
+      ${javaslatLista('jav-keszulek-lista', 'keszulek')}
       <div class="repair-detail-header" style="margin-bottom:18px;">
         <div class="name-block">
-          <input class="cat-title-input" data-field="keszulek" placeholder="Készülék" value="${escapeHtml(rec.keszulek)}" />
+          <input class="cat-title-input" data-field="keszulek" placeholder="Készülék" list="jav-keszulek-lista" autocomplete="off" value="${escapeHtml(rec.keszulek)}" />
           <input class="model-input" data-field="modell" placeholder="Modellszám" value="${escapeHtml(rec.modell)}" />
         </div>
         <select class="status-badge-select" data-field="status" style="border-color:${color};color:${color};">
@@ -152,7 +175,7 @@
       <div class="repair-detail-body">
         <div class="detail-fields-card">
           <div class="field-grid">
-            <div><span class="field-label">Ügyfél</span><input class="cell-input" data-field="partner" value="${escapeHtml(rec.partner)}" /></div>
+            <div><span class="field-label">Ügyfél</span><input class="cell-input" data-field="partner" list="jav-ugyfel-lista" autocomplete="off" value="${escapeHtml(rec.partner)}" /></div>
             <div><span class="field-label">Sorozatszám</span><input class="cell-input" data-field="serial" value="${escapeHtml(rec.serial)}" /></div>
             <div><span class="field-label">Bevétel dátuma</span><input class="cell-input" type="date" data-field="dateIn" value="${escapeHtml(rec.dateIn)}" /></div>
             <div><span class="field-label">Kiadás dátuma</span><input class="cell-input" type="date" data-field="dateOut" value="${escapeHtml(rec.dateOut)}" /></div>
@@ -230,6 +253,19 @@
     else renderListScreen(root);
   }
 
+  function getDashboardInfo() {
+    const all = Object.values(javitasData);
+    if (!all.length) return null;
+    const inProgress = all.filter((r) => ['Elkezdett', 'Árajánlatra vár', 'Árajánlat kiadva'].includes(normStatus(r.status))).length;
+    const nemFizetett = all.filter(unpaid).length;
+    return {
+      szam: all.length,
+      egyseg: 'javítás',
+      mellek: inProgress > 0 ? `${inProgress} van folyamatban` : 'nincs folyamatban lévő',
+      figyelem: nemFizetett > 0 ? { szoveg: `${nemFizetett} elvitték, nem fizették`, suly: 'piros' } : null
+    };
+  }
+
   function getDashboardStat() {
     const all = Object.values(javitasData);
     if (all.length === 0) return '<span class="dash-card-stat muted">még nincs adat</span>';
@@ -244,7 +280,7 @@
   function initJavitasModule() {
     window.DataLayer.watchJavitas((data) => {
       javitasData = data || {};
-      render();
+      window.RenderGuard.rajzol(render, 'javitas');
       window.DashboardStats?.refresh();
     });
   }
@@ -260,12 +296,13 @@
     return null;
   }
 
-window.JavitasModule = { init: initJavitasModule, getFigyelmeztetes };
+window.JavitasModule = { init: initJavitasModule, getFigyelmeztetes, getDashboardInfo };
   window.ModuleNav = window.ModuleNav || {};
   window.ModuleNav.javitas = {
     isDetail: () => screen === 'detail',
     goToList: () => { screen = 'list'; render(); window.AppAnim?.ujra(); },
-    getDashboardStat
+    getDashboardStat,
+    getDashboardInfo
   };
 })();
 

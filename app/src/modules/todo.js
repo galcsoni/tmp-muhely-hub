@@ -120,9 +120,14 @@
       if (input) { input.focus(); input.setSelectionRange(caret, caret); }
     });
     document.getElementById('todo-add-section')?.addEventListener('click', () => {
-      const name = prompt('Szekció neve (pl. egy név vagy téma):');
-      if (name === null || !name.trim()) return;
-      window.DataLayer.todoSectionAdd(name.trim());
+      window.AppKerdes.szoveg({
+        cim: 'Új szekció',
+        leiras: 'Kinek vagy minek a teendői kerülnek ide?',
+        hely: 'pl. Bon, Tompika, Weboldal'
+      }).then((name) => {
+        if (name === null || !name.trim()) return;
+        window.DataLayer.todoSectionAdd(name.trim());
+      });
     });
     document.getElementById('todo-migrate')?.addEventListener('click', () => {
       if (!confirm('Átemeli a régi TO-DO szekciókat és feladatokat. A régi "Kész" gyűjtőben lévő feladatok visszakerülnek az eredeti szekciójukba, kész jelöléssel. Folytatod?')) return;
@@ -303,9 +308,16 @@
       });
     });
     document.getElementById('todo-add-idea')?.addEventListener('click', () => {
-      const text = prompt('Mi az ötlet? (később bármikor átminősíthető feladattá)');
-      if (text === null || !text.trim()) return;
-      window.DataLayer.todoTaskAdd(activeSectionId, { status: 'Ötlet', description: text.trim() });
+      window.AppKerdes.szoveg({
+        cim: '💡 Ötlet bedobása',
+        leiras: 'Írd le röviden. Később bármikor átminősíthető rendes feladattá.',
+        hely: 'Mi jutott eszedbe?',
+        tobbSoros: true,
+        gomb: 'Bedobom'
+      }).then((text) => {
+        if (text === null || !text.trim()) return;
+        window.DataLayer.todoTaskAdd(activeSectionId, { status: 'Ötlet', description: text.trim() });
+      });
     });
     root.querySelector('[data-action="delete-section"]')?.addEventListener('click', () => {
       if (!confirm('Biztosan törlöd ezt a szekciót az összes feladatával együtt?')) return;
@@ -335,6 +347,24 @@
     else renderListScreen(root);
   }
 
+  function getDashboardInfo() {
+    let open = 0, fontos = 0, overdue = 0;
+    Object.values(data).forEach((section) => {
+      Object.values(section.tasks || {}).forEach((t) => {
+        if (t.status !== 'Kész') open += 1;
+        if (t.status === 'Fontos') fontos += 1;
+        if (isOverdue(t)) overdue += 1;
+      });
+    });
+    if (!Object.keys(data).length) return null;
+    return {
+      szam: open,
+      egyseg: 'nyitott teendő',
+      mellek: fontos > 0 ? `ebből ${fontos} fontos` : 'nincs sürgős',
+      figyelem: overdue > 0 ? { szoveg: `${overdue} határideje lejárt`, suly: 'piros' } : null
+    };
+  }
+
   function getDashboardStat() {
     let open = 0, fontos = 0, overdue = 0, otlet = 0;
     Object.values(data).forEach((section) => {
@@ -356,7 +386,7 @@
   function init() {
     window.DataLayer.watchTodo((d) => {
       data = d || {};
-      render();
+      window.RenderGuard.rajzol(render, 'todo');
       window.DashboardStats?.refresh();
     });
   }
@@ -382,11 +412,12 @@
     return null;
   }
 
-window.TodoModule = { init, getFigyelmeztetes };
+window.TodoModule = { init, getFigyelmeztetes, getDashboardInfo };
   window.ModuleNav = window.ModuleNav || {};
   window.ModuleNav.todo = {
     isDetail: () => screen === 'detail',
     goToList: () => { screen = 'list'; render(); window.AppAnim?.ujra(); },
-    getDashboardStat
+    getDashboardStat,
+    getDashboardInfo
   };
 })();

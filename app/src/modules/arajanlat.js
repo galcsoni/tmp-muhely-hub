@@ -554,7 +554,29 @@
   }
 
   // ── SZERKESZTŐ NÉZET ──────────────────────────────────────────────────
-  function saveFormState() { window.DataLayer.arajanlatWrite(activeId, formState); }
+  // Gépelés közben nem írunk a felhőbe minden egyes betűnél: megvárjuk,
+  // amíg fél másodpercig nem történik semmi. Így nem akad a gépelés.
+  // Fontos pillanatokban (kilépés, nyomtatás, PDF) azonnal mentünk.
+  let mentesTimer = null;
+
+  function saveFormState() {
+    if (mentesTimer) clearTimeout(mentesTimer);
+    mentesTimer = setTimeout(() => {
+      mentesTimer = null;
+      if (activeId && formState) window.DataLayer.arajanlatWrite(activeId, formState);
+    }, 500);
+  }
+
+  // Azonnali mentés - a függőben lévő írást is kikényszeríti
+  function saveFormStateNow() {
+    if (mentesTimer) { clearTimeout(mentesTimer); mentesTimer = null; }
+    if (activeId && formState) window.DataLayer.arajanlatWrite(activeId, formState);
+  }
+
+  // Ha bezárják az ablakot gépelés közben, az utolsó betűk se vesszenek el
+  window.addEventListener('beforeunload', () => {
+    if (mentesTimer) saveFormStateNow();
+  });
 
   function renderEditorScreen(root) {
     const q = formState;
@@ -629,8 +651,9 @@
       </div>
     `;
 
-    document.getElementById('aj-print')?.addEventListener('click', () => window.print());
+    document.getElementById('aj-print')?.addEventListener('click', () => { saveFormStateNow(); window.print(); });
     document.getElementById('aj-download')?.addEventListener('click', async () => {
+      saveFormStateNow();
       const html = buildStandaloneHtml(formState, profiles[formState.profilId]);
       const namePart = (formState.cim || formState.megrendeloNev || 'nevtelen').replace(/[^a-zA-Z0-9áéíóöőúüűÁÉÍÓÖŐÚÜŰ]+/g, '_');
       const suggestedName = `TMP_arajanlat_${namePart}_${formState.datum}.pdf`;
@@ -744,6 +767,18 @@
     else renderListScreen(root);
   }
 
+  function getDashboardInfo() {
+    const count = Object.keys(quotes).length;
+    if (!count) return null;
+    const kft = Object.values(quotes).filter((q) => quoteTipus(q) === 'KFT').length;
+    return {
+      szam: count,
+      egyseg: 'árajánlat',
+      mellek: `${kft} KFT · ${count - kft} EV`,
+      figyelem: null
+    };
+  }
+
   function getDashboardStat() {
     const count = Object.keys(quotes).length;
     if (count === 0) return '<span class="dash-card-stat muted">még nincs adat</span>';
@@ -756,20 +791,24 @@
       profiles = p || {};
       profilesLoaded = true;
       maybeAutoSeed();
-      if (screen !== 'editor') render();
+      if (screen !== 'editor') window.RenderGuard.rajzol(render, 'arajanlat');
     });
     window.DataLayer.watchArajanlatUgyfelek((u) => {
       ugyfelek = u || {};
       ugyfelekLoaded = true;
       maybeAutoSeed();
-      if (screen !== 'editor') render();
+      if (screen !== 'editor') window.RenderGuard.rajzol(render, 'arajanlat');
     });
     window.DataLayer.watchArajanlatok((d) => {
       quotes = d || {};
-      if (screen !== 'editor') render();
+      if (screen !== 'editor') window.RenderGuard.rajzol(render, 'arajanlat');
       window.DashboardStats?.refresh();
     });
   }
+
+  // A Javítás modul innen kéri le a mentett ügyfélneveket, hogy gépelés
+  // közben felajánlhassa őket.
+  window.ArajanlatUgyfelNevek = () => Object.values(ugyfelek).map((u) => (u && u.nev) || '').filter(Boolean);
 
   window.ArajanlatModule = { init };
   window.ModuleNav = window.ModuleNav || {};
@@ -777,12 +816,13 @@
     isDetail: () => screen === 'editor' || screen === 'tipus',
     goToList: () => {
       // Lépcsőzetes vissza: szerkesztő → típus lista → főoldal
-      if (screen === 'editor') { screen = 'tipus'; formState = null; }
+      if (screen === 'editor') { saveFormStateNow(); screen = 'tipus'; formState = null; }
       else { screen = 'list'; activeTipus = null; }
       render();
       window.AppAnim?.ujra();
     },
-    getDashboardStat
+    getDashboardStat,
+    getDashboardInfo
   };
 })();
 

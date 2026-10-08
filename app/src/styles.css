@@ -127,10 +127,149 @@ body {
 .dash-card.disabled { cursor: default; opacity: 0.5; }
 .dash-card.disabled:hover { transform: none; box-shadow: none; }
 
-.dash-card-icon, .info-card-icon { font-size: 34px; margin-bottom: 14px; display: block; }
-.dash-card-title, .info-card-title { font-family: var(--font-display); font-weight: 700; font-size: 19px; margin-bottom: 6px; color: var(--ink); }
+.info-card-icon { font-size: 34px; margin-bottom: 14px; display: block; }
+.info-card-title { font-family: var(--font-display); font-weight: 700; font-size: 19px; margin-bottom: 6px; color: var(--ink); }
 .dash-card-stat, .info-card-stat { font-size: 13px; color: var(--accent); font-weight: 500; }
 .dash-card-stat.muted, .info-card-stat.muted { color: var(--text-dim); }
+
+/* ── Főoldal ───────────────────────────────────────────────────────────
+   Középre zárt, nyugodt oszlop. A terület neve oldalt áll, a hozzá tartozó
+   modulok mellette sorakoznak - így széles monitoron sem úszik szét a kép. */
+.dash-oldal { max-width: 940px; margin: 0 auto; }
+
+.dash-csoport {
+  display: grid;
+  grid-template-columns: 104px minmax(0, 1fr);
+  gap: 0 26px;
+  padding: 30px 0;
+  border-top: 1px solid var(--border);
+}
+.dash-csoport:first-child { border-top: none; padding-top: 6px; }
+.dash-csoport:last-child { padding-bottom: 10px; }
+
+.dash-csoport-fej { padding-top: 3px; }
+.dash-csoport-cim {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 17px;
+  color: var(--ink);
+  margin: 0 0 10px;
+  line-height: 1.2;
+}
+.dash-csoport-vonal {
+  display: block; width: 26px; height: 2px;
+  background: var(--border-light); border-radius: 2px;
+}
+
+.dash-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 13px;
+  align-items: start;
+}
+
+@media (max-width: 920px) {
+  .dash-csoport { grid-template-columns: 1fr; gap: 14px; padding: 24px 0; }
+  .dash-csoport-fej { display: flex; align-items: center; gap: 12px; }
+  .dash-csoport-cim { margin: 0; }
+  .dash-csoport-vonal { flex: 1; width: auto; }
+  .dash-grid { grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
+}
+
+/* ── Modulkártya: a TMP logó pajzsformájában ───────────────────────────
+   A kontúrt SVG rajzolja (a lecsapott alj miatt CSS-kerettel nem menne).
+   Minden kártya azonos arányú, így a forma mindenhol egyforma, és a
+   vonalvastagság nyújtáskor sem változik. */
+.pajzs-kartya {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 778 / 492;
+  border: none;
+  background: none;
+  padding: 0;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.16s cubic-bezier(0.16, 0.9, 0.3, 1);
+}
+.pajzs-kartya:hover { transform: translateY(-3px); }
+.pajzs-kartya:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+.pajzs-kartya.disabled { cursor: default; opacity: 0.5; }
+.pajzs-kartya.disabled:hover { transform: none; }
+
+.pk-alak {
+  position: absolute; inset: 0; width: 100%; height: 100%; display: block;
+  /* A vonal fele kilóg a rajzterületből; enélkül a V csúcsa levágódna */
+  overflow: visible;
+}
+.pk-alak path {
+  fill: var(--bg-card);
+  stroke: #211F1C;
+  stroke-width: 3.4;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  transition: stroke 0.16s ease;
+}
+.pajzs-kartya:hover .pk-alak path { stroke: var(--mszin, var(--ink)); }
+
+/* A tartalom a forma fölött ül, az oldalt lecsapott sarkokat kerülve */
+.pk-tartalom {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  padding: 16px 18px 0;
+}
+.pk-fejlec { display: flex; align-items: center; gap: 9px; }
+.pk-ikon {
+  width: 30px; height: 30px; flex: none;
+  display: grid; place-items: center;
+  font-size: 15px; line-height: 1;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--mszin, var(--accent)) 14%, transparent);
+}
+@supports not (background: color-mix(in srgb, red 10%, transparent)) {
+  .pk-ikon { background: var(--bg-panel); }
+}
+.pk-nevek { min-width: 0; display: block; }
+.pk-nev {
+  display: block;
+  font-family: var(--font-display); font-weight: 700;
+  font-size: 15.5px; color: var(--ink); line-height: 1.15;
+}
+.pk-alcim {
+  display: block; font-size: 10.5px; color: var(--text-dim); margin-top: 1px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.pk-ertek { display: flex; align-items: baseline; gap: 5px; margin-top: 11px; }
+.pk-szam {
+  font-family: var(--font-display); font-weight: 700;
+  font-size: 25px; line-height: 1; color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.pk-egyseg { font-size: 12px; color: var(--text-secondary); }
+.pk-mellek { font-size: 11px; color: var(--text-dim); margin-top: 3px; }
+.pk-ures { font-size: 12px; color: var(--text-dim); font-style: italic; margin-top: 12px; }
+
+/* A figyelmeztetés a V fölé, középre kerül - ott van a legtöbb hely */
+.pk-figyelem {
+  margin-top: auto; margin-bottom: 15.5%;
+  align-self: center;
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11px; font-weight: 500;
+}
+.pk-pont { width: 6px; height: 6px; border-radius: 50%; flex: none; }
+.pk-figyelem.piros { color: var(--danger); }
+.pk-figyelem.piros .pk-pont { background: var(--danger); animation: dk-lüktet 2s ease-in-out infinite; }
+.pk-figyelem.sarga { color: var(--warn); }
+.pk-figyelem.sarga .pk-pont { background: var(--warn); }
+@keyframes dk-lüktet {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.45; transform: scale(0.8); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pk-figyelem .pk-pont { animation: none !important; }
+}
 .dash-card-soon {
   position: absolute; top: 16px; right: 18px;
   font-size: 9px; text-transform: uppercase; font-weight: 600;
@@ -713,7 +852,17 @@ table.inv-items tr:last-child td{border-bottom:none;}
   text-align: center;
 }
 .jatek-kartyak { margin-bottom: 20px; }
-.jatek-kartya { cursor: pointer; text-align: left; }
+.jatek-kartya {
+  cursor: pointer; text-align: left;
+  /* A játékkártyák a főoldali kártya kinézetét használják, de nem kell
+     nekik a modulkártya fejléc-szerkezete és felső színcsíkja. */
+  padding: 16px; display: block;
+}
+.jatek-kartya::before { display: none; }
+.jatek-kartya .dash-card-title {
+  font-family: var(--font-display); font-weight: 700; font-size: 20px;
+  color: var(--ink); margin-bottom: 2px;
+}
 .jatek-kartya-abra {
   width: 100%; height: auto; border-radius: 9px; display: block; margin-bottom: 12px;
 }
@@ -967,7 +1116,10 @@ body.indul { overflow: hidden; }
 .view.belep .card-grid > *:nth-child(n+9) { animation-delay: 0.45s; }
 
 /* A modulválasztó kártyái is ugyanígy jönnek be */
-.view.belep .dash-title { animation: modul-tartalom 0.4s ease 0.04s both; }
+.view.belep .dash-csoport { animation: modul-tartalom 0.4s ease both; }
+.view.belep .dash-csoport:nth-child(1) { animation-delay: 0.04s; }
+.view.belep .dash-csoport:nth-child(2) { animation-delay: 0.12s; }
+.view.belep .dash-csoport:nth-child(3) { animation-delay: 0.20s; }
 .view.belep .dash-grid > *:nth-child(1) { animation: modul-tartalom 0.42s cubic-bezier(0.16,0.9,0.3,1) 0.08s both; }
 .view.belep .dash-grid > *:nth-child(2) { animation: modul-tartalom 0.42s cubic-bezier(0.16,0.9,0.3,1) 0.12s both; }
 .view.belep .dash-grid > *:nth-child(3) { animation: modul-tartalom 0.42s cubic-bezier(0.16,0.9,0.3,1) 0.16s both; }
@@ -1044,4 +1196,366 @@ body.indul { overflow: hidden; }
 @keyframes frissites-csuszik {
   0%   { transform: translateX(-100%); }
   100% { transform: translateX(250%); }
+}
+
+/* ══ KATALÓGUS ═══════════════════════════════════════════════════════════ */
+
+/* ── Termékrács borítóképpel ───────────────────────────────────────────── */
+.kat-termek-racs {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 20px;
+}
+.kat-termek-kartya {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 14px; overflow: hidden; cursor: pointer;
+  transition: transform 0.18s cubic-bezier(0.16,0.9,0.3,1), box-shadow 0.18s ease, border-color 0.18s ease;
+}
+.kat-termek-kartya:hover {
+  transform: translateY(-4px);
+  border-color: var(--border-light);
+  box-shadow: 0 14px 32px rgba(42, 37, 32, 0.13);
+}
+.kat-kartya-kep {
+  position: relative; aspect-ratio: 4 / 3; background: var(--bg-panel);
+  display: grid; place-items: center; overflow: hidden;
+}
+.kat-kartya-kep img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.kat-kartya-ures { font-size: 38px; opacity: 0.25; }
+.kat-kartya-tipus {
+  position: absolute; top: 10px; left: 10px;
+  color: #FFF; font-size: 10.5px; font-weight: 600;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  padding: 4px 10px; border-radius: 20px;
+}
+.kat-kartya-also { padding: 14px 16px 16px; }
+.kat-kartya-nev {
+  font-family: var(--font-display); font-weight: 700; font-size: 17px;
+  margin-bottom: 4px; line-height: 1.25;
+}
+.kat-kartya-leiras {
+  font-size: 12.5px; color: var(--text-dim); line-height: 1.5;
+  margin-bottom: 7px;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.kat-kartya-meta { font-size: 11px; color: var(--stone); }
+
+/* ── Az oldal fölötti eszközsáv ────────────────────────────────────────── */
+.kat-oldal-sav {
+  display: flex; align-items: center; gap: 9px; flex-wrap: wrap;
+  margin-bottom: 26px; padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ── A katalógusoldal ──────────────────────────────────────────────────── */
+.kat-oldal { max-width: 1080px; margin: 0 auto; }
+
+.kat-fejlec {
+  display: grid; grid-template-columns: minmax(0, 420px) minmax(0, 1fr);
+  gap: 38px; align-items: center; margin-bottom: 54px;
+}
+@media (max-width: 900px) { .kat-fejlec { grid-template-columns: 1fr; gap: 24px; } }
+
+.kat-fejlec-kep {
+  position: relative; aspect-ratio: 4 / 3;
+  background: var(--bg-panel); border: 1px solid var(--border);
+  border-radius: 16px; overflow: hidden;
+  display: grid; place-items: center;
+}
+.kat-fejlec-kep img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.kat-fejlec-ures { font-size: 56px; opacity: 0.18; }
+.kat-borito-gomb {
+  position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
+  background: rgba(42, 37, 32, 0.88); color: #F5EFE6;
+  border: none; border-radius: 22px; padding: 8px 18px;
+  font-family: var(--font-sans); font-size: 12px; cursor: pointer;
+  white-space: nowrap;
+}
+.kat-borito-gomb:hover { background: var(--ink); }
+
+.kat-fejlec-tipus {
+  display: inline-block; font-size: 10.5px; font-weight: 600;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  border: 1px solid; border-radius: 20px; padding: 4px 13px;
+  margin-bottom: 14px;
+}
+.kat-cim {
+  font-family: var(--font-display); font-weight: 700;
+  font-size: 42px; line-height: 1.1; margin: 0 0 10px; color: var(--ink);
+}
+.kat-cim-input {
+  font-family: var(--font-display); font-weight: 700; font-size: 34px;
+  width: 100%; background: transparent; color: var(--ink);
+  border: none; border-bottom: 2px solid var(--border);
+  padding: 2px 0 8px; margin-bottom: 12px;
+}
+.kat-cim-input:focus { outline: none; border-bottom-color: var(--accent); }
+.kat-alcim {
+  font-size: 16px; color: var(--accent); margin: 0 0 16px; line-height: 1.5;
+}
+.kat-bevezeto {
+  font-size: 14.5px; line-height: 1.8; color: var(--text-secondary); margin: 0;
+}
+
+/* ── Szakaszcím ────────────────────────────────────────────────────────── */
+.kat-szakasz-cim {
+  font-family: var(--font-display); font-weight: 700; font-size: 22px;
+  margin: 0 0 18px; padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 12px;
+}
+.kat-halvany-kicsi { font-family: var(--font-sans); font-size: 12px; font-weight: 400; color: var(--text-dim); }
+.kat-halvany { color: var(--text-dim); font-size: 13.5px; line-height: 1.7; }
+
+/* ── Műszaki adatok ────────────────────────────────────────────────────── */
+.kat-adatok-blokk { margin-bottom: 54px; }
+.kat-adat-racs {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 0 32px;
+}
+.kat-adat-par {
+  display: flex; align-items: baseline; gap: 12px;
+  padding: 11px 0; border-bottom: 1px solid var(--border);
+}
+.kat-adat-cimke { font-size: 13px; color: var(--text-dim); flex: none; min-width: 130px; }
+.kat-adat-ertek { font-size: 14px; font-weight: 500; }
+.kat-adat-par.szerk { gap: 8px; }
+.kat-adat-input {
+  flex: 1; min-width: 0; background: transparent; border: none;
+  border-bottom: 1px solid var(--border); padding: 6px 2px;
+  font-family: inherit; font-size: 13px; color: var(--text);
+}
+.kat-adat-input:focus { outline: none; border-bottom-color: var(--accent); }
+.kat-adat-x {
+  background: none; border: none; color: var(--border-light);
+  font-size: 18px; cursor: pointer; padding: 0 4px; line-height: 1;
+}
+.kat-adat-x:hover { color: var(--danger); }
+
+/* ── Fázis ─────────────────────────────────────────────────────────────── */
+.kat-fazis { margin-bottom: 64px; }
+.kat-fazis-fejlec {
+  display: flex; align-items: center; gap: 14px; margin-bottom: 22px;
+}
+.kat-fazis-jel {
+  width: 40px; height: 40px; border-radius: 50%; flex: none;
+  display: grid; place-items: center;
+  color: #FFF; font-family: var(--font-display); font-weight: 700; font-size: 17px;
+}
+.kat-fazis-cim {
+  font-family: var(--font-display); font-weight: 700; font-size: 26px;
+  margin: 0; flex: 1; line-height: 1.2;
+}
+.kat-fazis-cim-input {
+  font-family: var(--font-display); font-weight: 700; font-size: 24px;
+  flex: 1; background: transparent; color: var(--ink);
+  border: none; border-bottom: 1px solid var(--border); padding: 3px 0 6px;
+}
+.kat-fazis-cim-input:focus { outline: none; border-bottom-color: var(--accent); }
+.kat-fazis-mezok {
+  background: var(--bg-panel); border: 1px solid var(--border);
+  border-radius: 12px; padding: 14px; margin-bottom: 20px;
+}
+.kat-nincs-kep-sor {
+  text-align: center; padding: 30px;
+  border: 2px dashed var(--border); border-radius: 14px;
+}
+
+.kat-figyelem {
+  display: flex; align-items: flex-start; gap: 12px;
+  background: rgba(176, 69, 58, 0.06);
+  border: 1px solid rgba(176, 69, 58, 0.26);
+  border-left: 3px solid var(--danger);
+  border-radius: 0 12px 12px 0; padding: 15px 20px; margin-bottom: 26px;
+  font-size: 14px; line-height: 1.7; color: var(--text-secondary);
+}
+.kat-figyelem-ikon { font-size: 17px; flex: none; }
+
+/* ── Váltakozó kép/szöveg sorok ────────────────────────────────────────── */
+.kat-kep-sor {
+  display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: 34px; align-items: center; margin-bottom: 46px;
+}
+@media (max-width: 860px) {
+  .kat-kep-sor { grid-template-columns: 1fr; gap: 18px; }
+  .kat-kep-sor.jobbra .kat-sor-kep { order: -1; }   /* mobilon mindig a kép legyen felül */
+}
+
+.kat-sor-kep { min-width: 0; }
+.kat-kep-keret {
+  position: relative; line-height: 0;
+  border-radius: 14px; overflow: hidden;
+  background: var(--bg-panel); border: 1px solid var(--border);
+}
+.kat-kep-keret img { width: 100%; height: auto; display: block; }
+.kat-kep-keret.jelolo { cursor: crosshair; }
+.kat-kep-keret.jelolo::after {
+  content: ''; position: absolute; inset: 0;
+  border: 2px dashed var(--accent); border-radius: 14px; pointer-events: none;
+}
+.kat-kep-tolt {
+  min-height: 240px; display: grid; place-items: center;
+  background: var(--bg-card-hover); font-size: 12px; color: var(--text-dim);
+}
+.kat-kep-labjegyzet {
+  display: flex; align-items: center; gap: 10px;
+  margin-top: 9px; font-size: 11.5px; color: var(--text-dim);
+}
+.kat-kep-sorszam { font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+.kat-kep-pontdb { color: var(--accent); }
+
+.kat-sor-szoveg { min-width: 0; }
+.kat-kep-felirat {
+  font-size: 14.5px; line-height: 1.85; color: var(--text-secondary); margin: 0 0 14px;
+}
+.kat-kep-felirat-input {
+  width: 100%; background: var(--bg-card); color: var(--text);
+  border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px;
+  font-family: inherit; font-size: 14px; line-height: 1.7; resize: vertical;
+  margin-bottom: 14px;
+}
+.kat-kep-felirat-input:focus { outline: none; border-color: var(--accent); }
+
+.kat-mini-gomb {
+  background: transparent; border: 1px solid var(--border);
+  border-radius: 18px; padding: 5px 13px;
+  font-family: var(--font-sans); font-size: 11.5px; color: var(--text-dim);
+  cursor: pointer; transition: border-color 0.15s ease, color 0.15s ease;
+}
+.kat-mini-gomb:hover { border-color: var(--accent); color: var(--accent); }
+.kat-mini-gomb.piros:hover { border-color: var(--danger); color: var(--danger); }
+
+/* ── Jelölt pontok ─────────────────────────────────────────────────────── */
+.kat-pont {
+  position: absolute; transform: translate(-50%, -50%);
+  display: flex; align-items: center;
+  background: var(--ink); color: #FFF;
+  border: 2px solid #FFF; border-radius: 20px; padding: 0;
+  cursor: pointer; line-height: 1;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.35);
+  transition: background 0.2s ease; z-index: 2;
+}
+.kat-pont-szam {
+  width: 26px; height: 26px; display: grid; place-items: center;
+  font-size: 12px; font-weight: 600; flex: none;
+}
+.kat-pont-cimke {
+  max-width: 0; overflow: hidden; white-space: nowrap;
+  font-size: 12px; opacity: 0;
+  transition: max-width 0.25s ease, opacity 0.2s ease, padding 0.25s ease;
+}
+.kat-pont:hover { background: var(--accent); z-index: 5; }
+.kat-pont:hover .kat-pont-cimke { max-width: 230px; opacity: 1; padding-right: 13px; }
+.kat-pont.hianyzo { background: var(--danger); }
+.kat-pont.kiemelt { animation: kat-pont-villan 0.6s ease 3; z-index: 6; }
+@keyframes kat-pont-villan {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  50%      { transform: translate(-50%, -50%) scale(1.45); }
+}
+
+.kat-pont-jegyzek { display: flex; flex-wrap: wrap; gap: 7px; }
+.kat-jegyzek-elem {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 20px; padding: 5px 13px 5px 5px;
+  font-size: 12px; cursor: pointer;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+.kat-jegyzek-elem:hover { border-color: var(--accent); transform: translateY(-1px); }
+.kat-jegyzek-szam {
+  width: 20px; height: 20px; border-radius: 50%; flex: none;
+  background: var(--ink); color: #FFF;
+  display: grid; place-items: center; font-size: 10.5px; font-weight: 600;
+}
+
+.kat-jeloles-sav {
+  background: rgba(156, 107, 63, 0.09);
+  border: 1px solid rgba(156, 107, 63, 0.32);
+  border-radius: 12px; padding: 13px 18px; margin-bottom: 22px;
+  font-size: 13px; line-height: 1.65; color: var(--text-secondary);
+}
+.btn-secondary.aktiv-jeloles { background: var(--accent); color: #FFF; border-color: var(--accent); }
+
+/* ── Alkatrészlista ────────────────────────────────────────────────────── */
+.kat-alk-blokk { margin-top: 60px; padding-top: 8px; }
+.kat-alk-racs {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 9px;
+}
+.kat-alk-kartya {
+  display: flex; align-items: center; gap: 11px;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 10px; padding: 11px 14px; cursor: pointer;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+.kat-alk-kartya:hover { border-color: var(--accent); transform: translateY(-2px); }
+.kat-alk-kartya.hianyzo { opacity: 0.5; cursor: default; }
+.kat-alk-fo { flex: 1; min-width: 0; }
+.kat-alk-nev { display: block; font-size: 13.5px; font-weight: 500; }
+.kat-alk-hol { display: block; font-size: 11px; color: var(--text-dim); }
+.kat-alk-keszlet { font-size: 11px; color: var(--ok); white-space: nowrap; }
+.kat-alk-keszlet.keves { color: var(--warn); font-weight: 600; }
+.kat-alk-db { font-weight: 700; font-size: 14px; color: var(--accent); min-width: 32px; text-align: right; }
+.kat-alk-ossz {
+  margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border);
+  font-size: 14px; text-align: right;
+}
+
+/* ── Alkatrész-választó ────────────────────────────────────────────────── */
+.kat-valaszto-lista { max-height: 330px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
+.kat-valaszto-sor {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  background: var(--bg-panel); border: 1px solid transparent;
+  border-radius: 9px; padding: 10px 13px; cursor: pointer;
+  font-family: inherit; font-size: 13px; text-align: left; color: var(--text);
+  transition: border-color 0.14s ease, background 0.14s ease;
+}
+.kat-valaszto-sor:hover { border-color: var(--accent); background: var(--bg-card-hover); }
+.kat-valaszto-nev { flex: 1; min-width: 0; }
+.kat-valaszto-hol { font-size: 11px; color: var(--text-dim); }
+.kat-valaszto-db { font-size: 11.5px; color: var(--ok); min-width: 44px; text-align: right; }
+
+.kat-link-gomb {
+  display: block; text-decoration: none;
+  background: var(--bg-panel); border: 1px solid var(--border);
+  border-radius: 9px; padding: 9px 13px; margin-bottom: 6px;
+  font-size: 12.5px; color: var(--accent);
+  transition: border-color 0.15s ease;
+}
+.kat-link-gomb:hover { border-color: var(--accent); }
+
+/* ── Teljes képernyős képnézet ─────────────────────────────────────────── */
+#kat-nagyito {
+  position: fixed; inset: 0; z-index: 10500;
+  background: rgba(28, 26, 24, 0.95);
+  display: flex; flex-direction: column; padding: 16px;
+}
+.kat-nagyito-fejlec { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; flex: none; }
+.kat-nagyito-cim { color: #EDE6DC; font-size: 13px; flex: 1; }
+.kat-nagyito-kozep { flex: 1; display: grid; place-items: center; overflow: auto; min-height: 0; }
+.kat-nagyito-keret { position: relative; line-height: 0; }
+.kat-nagyito-keret img {
+  max-width: 100%; max-height: calc(100vh - 100px);
+  width: auto; height: auto; display: block; border-radius: 8px;
+}
+
+/* ── Saját beviteli ablak (a nem működő window.prompt helyett) ─────────── */
+.kerdes-ablak { padding: 4px 2px; }
+.kerdes-cim {
+  font-family: var(--font-display); font-weight: 700;
+  font-size: 20px; color: var(--ink); margin-bottom: 6px;
+}
+.kerdes-leiras {
+  font-size: 13px; color: var(--text-dim); line-height: 1.6;
+  margin: 0 0 16px;
+}
+.kerdes-ablak #kerdes-mezo {
+  width: 100%; margin-bottom: 18px;
+  font-size: 15px; padding: 11px 13px;
+}
+.kerdes-gombok { display: flex; gap: 9px; }
+
+/* Jelölésekhez fűzött megjegyzés az alkatrész-ablakban */
+.kat-megjegyzes {
+  font-size: 13.5px; line-height: 1.7; margin: 5px 0 0;
+  padding: 10px 13px; border-radius: 9px;
+  background: var(--bg-panel);
+  border-left: 3px solid var(--accent);
 }

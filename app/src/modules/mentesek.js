@@ -212,16 +212,39 @@
         .map((p) => '· ' + p.label)
         .join('\n');
       if (!confirm(`Ezek jelenlegi tartalmát felülírja a mentés:\n\n${labels}\n\nBiztosan folytatod?`)) return;
-      const check = prompt('Utolsó ellenőrzés: írd be nagybetűvel, hogy VISSZAALLIT');
-      if (check !== 'VISSZAALLIT') { alert('Megszakítva, semmi nem változott.'); return; }
-
-      window.DataLayer.backupRestore(loadedBackup, selected).then((n) => {
-        alert(`Kész, ${n} rész visszaállítva.`);
-        loadedBackup = null;
-        loadedName = '';
-        render();
-      }).catch((err) => alert('Hiba a visszaállításnál: ' + err.message));
+      window.AppKerdes.szoveg({
+        cim: 'Utolsó ellenőrzés',
+        leiras: 'Ez felülírja a kijelölt adatokat. Ha biztos vagy benne, írd be nagybetűkkel: VISSZAALLIT',
+        hely: 'VISSZAALLIT',
+        gomb: 'Visszaállítás'
+      }).then((check) => {
+        if (check !== 'VISSZAALLIT') {
+          if (check !== null) alert('Megszakítva, semmi nem változott.');
+          return;
+        }
+        window.DataLayer.backupRestore(loadedBackup, selected).then((n) => {
+          alert(`Kész, ${n} rész visszaállítva.`);
+          loadedBackup = null;
+          loadedName = '';
+          render();
+        }).catch((err) => alert('Hiba a visszaállításnál: ' + err.message));
+      });
     });
+  }
+
+  function getDashboardInfo() {
+    const days = daysSince(meta.lastBackupAt);
+    if (days === null) {
+      return { szam: '—', egyseg: 'még nincs mentés', mellek: 'töltsd le az elsőt',
+               figyelem: { szoveg: 'nincs biztonsági mentés', suly: 'piros' } };
+    }
+    return {
+      szam: days === 0 ? 'ma' : days,
+      egyseg: days === 0 ? 'volt az utolsó mentés' : (days === 1 ? 'napja mentettél' : 'napja mentettél'),
+      mellek: days >= 7 ? 'ideje újat készíteni' : 'naprakész',
+      figyelem: days >= 14 ? { szoveg: 'régen volt mentés', suly: 'piros' }
+              : (days >= 7 ? { szoveg: 'ideje menteni', suly: 'sarga' } : null)
+    };
   }
 
   function getDashboardStat() {
@@ -236,7 +259,7 @@
   function init() {
     window.DataLayer.watchBackupMeta((d) => {
       meta = d || {};
-      render();
+      window.RenderGuard.rajzol(render, 'mentesek');
       window.DashboardStats?.refresh();
     });
   }
@@ -259,11 +282,12 @@
     return null;
   }
 
-  window.MentesekModule = { init, getFigyelmeztetes };
+  window.MentesekModule = { init, getFigyelmeztetes, getDashboardInfo };
   window.ModuleNav = window.ModuleNav || {};
   window.ModuleNav.mentesek = {
     isDetail: () => false,
     goToList: () => {},
-    getDashboardStat
+    getDashboardStat,
+    getDashboardInfo
   };
 })();

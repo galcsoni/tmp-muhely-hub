@@ -489,6 +489,152 @@ function dokDelete(katId, docId) {
   return removeAt(`${DOKUMENTUM_PATH}/${katId}/docs/${docId}`);
 }
 
+// ── KATALÓGUS (gyártási dokumentáció) ───────────────────────────────────
+// Szerkezet:
+//   katalogus/<termekId>/
+//       nev, tipus, rovidLeiras, leiras, order, createdAt
+//       adatok/<sorId>/ { cimke, ertek }          - műszaki adatok
+//       fazisok/<fazisId>/
+//           cim, leiras, figyelem, order
+//           kepek/<kepId>/ { order, pontok/<pontId>/ {x, y, katId, partId, megjegyzes} }
+//
+// A KÉPEK NEM ITT vannak, hanem külön ágon (katalogus_kepek), hogy a
+// katalógus betöltése gyors maradjon. A kép csak akkor töltődik le,
+// amikor tényleg meg kell jeleníteni.
+const KATALOGUS_PATH = 'katalogus';
+const KATALOGUS_KEP_PATH = 'katalogus_kepek';
+
+function watchKatalogus(callback) {
+  return watchPath(KATALOGUS_PATH, callback);
+}
+
+// ── Termék ──
+function katTermekAdd(nev, tipus) {
+  const id = pushId(KATALOGUS_PATH);
+  return writeAt(`${KATALOGUS_PATH}/${id}`, {
+    nev: nev || 'Névtelen termék',
+    tipus: tipus || '',
+    rovidLeiras: '',
+    leiras: '',
+    order: Date.now(),
+    createdAt: Date.now()
+  }).then(() => id);
+}
+
+function katTermekUpdate(termekId, patch) {
+  return updateAt(`${KATALOGUS_PATH}/${termekId}`, patch);
+}
+
+function katTermekDelete(termekId) {
+  // a termék képeit is takarítjuk, különben árván maradnának
+  return removeAt(`${KATALOGUS_KEP_PATH}/${termekId}`)
+    .catch(() => {})
+    .then(() => removeAt(`${KATALOGUS_PATH}/${termekId}`));
+}
+
+// ── Műszaki adatsorok ──
+function katAdatAdd(termekId, cimke, ertek) {
+  const id = pushId(`${KATALOGUS_PATH}/${termekId}/adatok`);
+  return writeAt(`${KATALOGUS_PATH}/${termekId}/adatok/${id}`, {
+    cimke: cimke || '', ertek: ertek || '', order: Date.now()
+  }).then(() => id);
+}
+
+function katAdatUpdate(termekId, sorId, patch) {
+  return updateAt(`${KATALOGUS_PATH}/${termekId}/adatok/${sorId}`, patch);
+}
+
+function katAdatDelete(termekId, sorId) {
+  return removeAt(`${KATALOGUS_PATH}/${termekId}/adatok/${sorId}`);
+}
+
+// ── Fázisok (összeszerelési lépések) ──
+function katFazisAdd(termekId, cim, order) {
+  const id = pushId(`${KATALOGUS_PATH}/${termekId}/fazisok`);
+  return writeAt(`${KATALOGUS_PATH}/${termekId}/fazisok/${id}`, {
+    cim: cim || 'Új fázis',
+    leiras: '',
+    figyelem: '',
+    order: order != null ? order : Date.now()
+  }).then(() => id);
+}
+
+function katFazisUpdate(termekId, fazisId, patch) {
+  return updateAt(`${KATALOGUS_PATH}/${termekId}/fazisok/${fazisId}`, patch);
+}
+
+function katFazisDelete(termekId, fazisId) {
+  return removeAt(`${KATALOGUS_KEP_PATH}/${termekId}/${fazisId}`)
+    .catch(() => {})
+    .then(() => removeAt(`${KATALOGUS_PATH}/${termekId}/fazisok/${fazisId}`));
+}
+
+// ── Képek ──
+// A metaadat (sorrend, jelölt pontok) a katalogus ágon van, maga a
+// képfájl a katalogus_kepek ágon. Így a pontokat lehet szerkeszteni
+// anélkül, hogy a képet újra le kellene tölteni.
+function katKepAdd(termekId, fazisId, dataUrl) {
+  const id = pushId(`${KATALOGUS_PATH}/${termekId}/fazisok/${fazisId}/kepek`);
+  return writeAt(`${KATALOGUS_KEP_PATH}/${termekId}/${fazisId}/${id}`, dataUrl)
+    .then(() => writeAt(`${KATALOGUS_PATH}/${termekId}/fazisok/${fazisId}/kepek/${id}`, {
+      order: Date.now()
+    }))
+    .then(() => id);
+}
+
+function katKepGet(termekId, fazisId, kepId) {
+  return db.ref(`${KATALOGUS_KEP_PATH}/${termekId}/${fazisId}/${kepId}`).once('value')
+    .then((snap) => snap.val() || null);
+}
+
+// A képhez tartozó magyarázó szöveg (a kép mellett jelenik meg az oldalon)
+function katKepFeliratSet(termekId, fazisId, kepId, felirat) {
+  return updateAt(`${KATALOGUS_PATH}/${termekId}/fazisok/${fazisId}/kepek/${kepId}`, { felirat: felirat || '' });
+}
+
+function katKepDelete(termekId, fazisId, kepId) {
+  return removeAt(`${KATALOGUS_KEP_PATH}/${termekId}/${fazisId}/${kepId}`)
+    .then(() => removeAt(`${KATALOGUS_PATH}/${termekId}/fazisok/${fazisId}/kepek/${kepId}`));
+}
+
+// Termék borítóképe (a kártyán jelenik meg) - külön ágon, hogy a
+// katalógus listája gyorsan betöltsön.
+function katBoritoSet(termekId, dataUrl) {
+  return writeAt(`${KATALOGUS_KEP_PATH}/${termekId}/_borito`, dataUrl);
+}
+
+function katBoritoGet(termekId) {
+  return db.ref(`${KATALOGUS_KEP_PATH}/${termekId}/_borito`).once('value')
+    .then((snap) => snap.val() || null);
+}
+
+function katBoritoDelete(termekId) {
+  return removeAt(`${KATALOGUS_KEP_PATH}/${termekId}/_borito`);
+}
+
+// ── Jelölt pontok a képen (hotspot) ──
+// x, y: százalékban a kép bal felső sarkához képest - így a jelölés
+// bármilyen méretben ugyanoda esik.
+function katPontAdd(termekId, fazisId, kepId, pont) {
+  const alap = `${KATALOGUS_PATH}/${termekId}/fazisok/${fazisId}/kepek/${kepId}/pontok`;
+  const id = pushId(alap);
+  return writeAt(`${alap}/${id}`, {
+    x: pont.x, y: pont.y,
+    katId: pont.katId || '',
+    partId: pont.partId || '',
+    megjegyzes: pont.megjegyzes || '',
+    createdAt: Date.now()
+  }).then(() => id);
+}
+
+function katPontUpdate(termekId, fazisId, kepId, pontId, patch) {
+  return updateAt(`${KATALOGUS_PATH}/${termekId}/fazisok/${fazisId}/kepek/${kepId}/pontok/${pontId}`, patch);
+}
+
+function katPontDelete(termekId, fazisId, kepId, pontId) {
+  return removeAt(`${KATALOGUS_PATH}/${termekId}/fazisok/${fazisId}/kepek/${kepId}/pontok/${pontId}`);
+}
+
 // ── MENTÉSEK ────────────────────────────────────────────────────────────
 // Az alkalmazás összes éles adatága. A régi (v10_/v11_/v12_) ágakat NEM
 // mentjük, azok csak a migrációhoz kellenek és úgyis megvannak a régi
@@ -503,7 +649,9 @@ const BACKUP_PATHS = [
   { path: 'arajanlat_ugyfelek', label: 'Árajánlat - mentett ügyfelek' },
   { path: 'todo',               label: 'TO-DO' },
   { path: 'dokumentumok',       label: 'Dokumentumok' },
-  { path: 'raktar_kepek',       label: 'Alkatrész-képek' }
+  { path: 'raktar_kepek',       label: 'Alkatrész-képek' },
+  { path: 'katalogus',          label: 'Katalógus (termékek, fázisok)' },
+  { path: 'katalogus_kepek',    label: 'Katalógus - képek' }
 ];
 
 const BACKUP_META_PATH = 'meta/backup';
@@ -663,6 +811,26 @@ window.DataLayer = {
   dokAdd,
   dokUpdate,
   dokDelete,
+  watchKatalogus,
+  katTermekAdd,
+  katTermekUpdate,
+  katTermekDelete,
+  katAdatAdd,
+  katAdatUpdate,
+  katAdatDelete,
+  katFazisAdd,
+  katFazisUpdate,
+  katFazisDelete,
+  katKepAdd,
+  katKepGet,
+  katKepFeliratSet,
+  katKepDelete,
+  katBoritoSet,
+  katBoritoGet,
+  katBoritoDelete,
+  katPontAdd,
+  katPontUpdate,
+  katPontDelete,
   BACKUP_PATHS,
   backupBuild,
   backupRestore,

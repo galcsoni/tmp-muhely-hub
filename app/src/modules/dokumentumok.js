@@ -79,9 +79,14 @@
       if (input) { input.focus(); input.setSelectionRange(caret, caret); }
     });
     document.getElementById('dok-add-kat')?.addEventListener('click', () => {
-      const title = prompt('Kategória neve (pl. Gépek, Beszállítók, Garanciák):');
-      if (title === null || !title.trim()) return;
-      window.DataLayer.dokKategoriaAdd(title.trim());
+      window.AppKerdes.szoveg({
+        cim: 'Új kategória',
+        leiras: 'Mit gyűjtünk ebbe a kategóriába?',
+        hely: 'pl. Gépek, Beszállítók, Garanciák'
+      }).then((title) => {
+        if (title === null || !title.trim()) return;
+        window.DataLayer.dokKategoriaAdd(title.trim());
+      });
     });
     root.querySelectorAll('[data-open]').forEach((el) => {
       el.addEventListener('click', () => {
@@ -256,6 +261,13 @@
     else renderListScreen(root);
   }
 
+  function getDashboardInfo() {
+    let kat = 0, db = 0;
+    Object.values(data).forEach((k) => { kat += 1; db += Object.keys(k.docs || {}).length; });
+    if (!kat) return null;
+    return { szam: db, egyseg: 'dokumentum', mellek: `${kat} kategóriában`, figyelem: null };
+  }
+
   function getDashboardStat() {
     let kat = 0, db = 0;
     Object.values(data).forEach((k) => {
@@ -269,7 +281,7 @@
   function init() {
     window.DataLayer.watchDokumentumok((d) => {
       data = d || {};
-      render();
+      window.RenderGuard.rajzol(render, 'dokumentumok');
       window.DashboardStats?.refresh();
     });
   }
@@ -279,6 +291,7 @@
   window.ModuleNav.dokumentumok = {
     isDetail: () => screen === 'detail',
     goToList: () => { screen = 'list'; render(); window.AppAnim?.ujra(); },
-    getDashboardStat
+    getDashboardStat,
+    getDashboardInfo
   };
 })();

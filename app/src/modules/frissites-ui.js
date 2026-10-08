@@ -46,6 +46,7 @@
 
   // ── Új verzió érhető el ───────────────────────────────────────────────
   function elerheto(adat) {
+    const kezi = !!adat.kezi;   // macOS: nem tudja magát lecserélni
     const d = mutat(`
       <div class="frissites-cim">Frissítsd lécci!</div>
       <div class="frissites-alcim">
@@ -53,17 +54,19 @@
         <span class="frissites-halvany">(most ${escapeHtml(adat.jelenlegi)})</span>
       </div>
       <p class="frissites-info">
-        Az adataidhoz nem nyúl, azok a felhőben vannak. Pár másodperc az egész.
+        ${kezi
+          ? 'Megnyitom a letöltési oldalt. Töltsd le a .dmg fájlt, és húzd át az appot a Programokba - a régit felülírja.'
+          : 'Az adataidhoz nem nyúl, azok a felhőben vannak. Pár másodperc az egész.'}
       </p>
       <div class="frissites-gombok">
-        <button class="frissites-fo" data-mit="letolt">Letöltés</button>
+        <button class="frissites-fo" data-mit="letolt">${kezi ? 'Letöltési oldal' : 'Letöltés'}</button>
         <button class="frissites-mellek" data-mit="kesobb">Most nem</button>
       </div>
     `, true);
 
     d.querySelector('[data-mit="letolt"]')?.addEventListener('click', () => {
       window.nativeApp?.frissitesLetoltes();
-      folyamat({ szazalek: 0 });
+      if (kezi) bezar(); else folyamat({ szazalek: 0 });
     });
     d.querySelector('[data-mit="kesobb"]')?.addEventListener('click', bezar);
   }

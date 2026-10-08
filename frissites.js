@@ -9,11 +9,16 @@
 // a frissítés a programot cseréli, nem az adatot.
 // ─────────────────────────────────────────────────────────────────────────
 
-const { app, ipcMain } = require('electron');
+const { app, ipcMain, shell } = require('electron');
 const { autoUpdater } = require('electron-updater');
 
 let fovablak = null;
 let ujVerzio = null;
+
+// Windowson az app magát cseréli le. macOS-en ehhez Apple-aláírás kellene
+// (fizetős fejlesztői fiók), ezért ott a letöltési oldalra irányítunk.
+const ONFRISSITHETO = process.platform === 'win32';
+const LETOLTES_OLDAL = 'https://github.com/galcsoni/tmp-muhely-hub/releases/latest';
 
 function kuld(esemeny, adat) {
   if (fovablak && !fovablak.isDestroyed()) {
@@ -38,7 +43,12 @@ function beallit(win) {
 
   autoUpdater.on('update-available', (info) => {
     ujVerzio = info.version;
-    kuld('frissites:elerheto', { verzio: info.version, jelenlegi: app.getVersion() });
+    kuld('frissites:elerheto', {
+      verzio: info.version,
+      jelenlegi: app.getVersion(),
+      // macOS-en kézzel kell telepíteni, ezt az ablak is jelzi
+      kezi: !ONFRISSITHETO
+    });
   });
 
   autoUpdater.on('download-progress', (p) => {
@@ -66,6 +76,12 @@ function beallit(win) {
   });
 
   ipcMain.handle('frissites:letoltes', async () => {
+    // Aláírás nélküli macOS-build nem tudja lecserélni önmagát: ilyenkor
+    // megnyitjuk a letöltési oldalt, és a felhasználó áthúzza az újat.
+    if (!ONFRISSITHETO) {
+      shell.openExternal(LETOLTES_OLDAL);
+      return { ok: true, kezi: true };
+    }
     try {
       autoUpdater.downloadUpdate();
       return { ok: true };

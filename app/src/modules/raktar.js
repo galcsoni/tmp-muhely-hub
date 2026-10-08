@@ -6,7 +6,8 @@
 // ─────────────────────────────────────────────────────────────────────────
 
 (function () {
-  const TYPE_LABELS = { mechanika: 'Mechanika', modul: 'Modul', egyeb: 'Egyéb' };
+  // Kategóriatípusok: ezek szerint lehet szűrni a raktárban
+  const TYPE_LABELS = { mechanika: 'Mechanika', alkatresz: 'Alkatrész', modul: 'Modul', egyeb: 'Egyéb' };
   let raktarData = {};
   let searchTerm = '';
   let typeFilter = 'osszes';
@@ -129,9 +130,14 @@
     });
 
     document.getElementById('raktar-add-cat')?.addEventListener('click', () => {
-      const title = prompt('Kategória neve:');
-      if (title === null) return;
-      window.DataLayer.raktarAddCategory({ title, type: 'egyeb' });
+      window.AppKerdes.szoveg({
+        cim: 'Új kategória',
+        leiras: 'Hogy hívjuk ezt a kategóriát? (pl. Ellenállások, Kondenzátorok)',
+        hely: 'Kategória neve'
+      }).then((title) => {
+        if (title === null) return;
+        window.DataLayer.raktarAddCategory({ title: title.trim(), type: 'egyeb' });
+      });
     });
 
     document.getElementById('raktar-migrate')?.addEventListener('click', () => {
@@ -351,9 +357,15 @@
       window.AppModal.close();
     });
     content.querySelector('[data-action="add-link"]')?.addEventListener('click', () => {
-      const url = prompt('Link (URL) beillesztése:');
-      if (!url) return;
-      window.DataLayer.raktarAddPartLink(categoryId, partId, url).then(() => openPartModal(categoryId, partId));
+      window.AppKerdes.szoveg({
+        cim: 'Beszerzési link',
+        leiras: 'Hol lehet megvenni ezt az alkatrészt? Illeszd be a webcímet.',
+        hely: 'https://...'
+      }).then((url) => {
+        if (url === null || !url.trim()) return;
+        window.DataLayer.raktarAddPartLink(categoryId, partId, url.trim())
+          .then(() => openPartModal(categoryId, partId));
+      });
     });
     content.querySelectorAll('[data-action="remove-link"]').forEach((el) => {
       el.addEventListener('click', (e) => {
@@ -463,9 +475,28 @@
   function initRaktarModule() {
     window.DataLayer.watchRaktar((data) => {
       raktarData = data || {};
-      render();
+      window.RenderGuard.rajzol(render, 'raktar');
       window.DashboardStats?.refresh();
     });
+  }
+
+  // A főoldali kártyához: egy kiemelt szám, egy kiegészítő sor és
+  // legfeljebb egy figyelmeztetés.
+  function getDashboardInfo() {
+    const categories = Object.values(raktarData);
+    if (!categories.length) return null;
+    let parts = 0, missing = 0;
+    categories.forEach((cat) => {
+      const list = Object.values(cat.parts || {});
+      parts += list.length;
+      missing += list.filter((p) => Number(p.qty_kell || 0) > Number(p.qty_van || 0)).length;
+    });
+    return {
+      szam: parts,
+      egyseg: 'alkatrész',
+      mellek: `${categories.length} kategóriában`,
+      figyelem: missing > 0 ? { szoveg: `${missing} alkatrész fogytán`, suly: 'sarga' } : null
+    };
   }
 
   function getDashboardStat() {
@@ -494,12 +525,13 @@
     return null;
   }
 
-  window.RaktarModule = { init: initRaktarModule, getFigyelmeztetes };
+  window.RaktarModule = { init: initRaktarModule, getFigyelmeztetes, getDashboardInfo };
   window.ModuleNav = window.ModuleNav || {};
   window.ModuleNav.raktar = {
     isDetail: () => screen === 'detail',
     goToList: () => { screen = 'list'; render(); window.AppAnim?.ujra(); },
-    getDashboardStat
+    getDashboardStat,
+    getDashboardInfo
   };
 })();
 
