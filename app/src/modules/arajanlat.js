@@ -154,8 +154,21 @@
             </div>
           `;
         }).join('')}
+        ${window.TeljesitesModul ? `
+          <div class="category-card-tile" id="aj-open-teljesites" style="border-top:3px solid #6B7A63;">
+            <span class="cat-type-tag" style="border-color:#6B7A63;color:#6B7A63;">${window.TeljesitesModul.darab()} igazolás</span>
+            <div class="cat-name">Teljesítés</div>
+            <div class="cat-stat">Teljesítési igazolások a Pipelife számlák mellé</div>
+          </div>
+        ` : ''}
       </div>
     `;
+
+    document.getElementById('aj-open-teljesites')?.addEventListener('click', () => {
+      screen = 'teljesites';
+      window.TeljesitesModul.nyit();
+      window.AppAnim?.ujra();
+    });
 
     document.getElementById('aj-profiles')?.addEventListener('click', openProfilesModal);
     document.getElementById('aj-customers')?.addEventListener('click', openCustomersModal);
@@ -762,6 +775,8 @@
   function render() {
     const root = document.getElementById('module-body-arajanlat');
     if (!root) return;
+    // A Teljesítés ág saját modulban él, de ugyanebbe a felületbe rajzol
+    if (screen === 'teljesites' && window.TeljesitesModul?.benne()) { window.TeljesitesModul.rajzol(); return; }
     if (screen === 'editor' && formState) renderEditorScreen(root);
     else if (screen === 'tipus' && activeTipus) renderTipusScreen(root);
     else renderListScreen(root);
@@ -791,17 +806,18 @@
       profiles = p || {};
       profilesLoaded = true;
       maybeAutoSeed();
-      if (screen !== 'editor') window.RenderGuard.rajzol(render, 'arajanlat');
+      if (screen !== 'editor' && screen !== 'teljesites') window.RenderGuard.rajzol(render, 'arajanlat');
     });
     window.DataLayer.watchArajanlatUgyfelek((u) => {
       ugyfelek = u || {};
       ugyfelekLoaded = true;
       maybeAutoSeed();
-      if (screen !== 'editor') window.RenderGuard.rajzol(render, 'arajanlat');
+      if (screen !== 'editor' && screen !== 'teljesites') window.RenderGuard.rajzol(render, 'arajanlat');
     });
+    window.TeljesitesModul?.init();
     window.DataLayer.watchArajanlatok((d) => {
       quotes = d || {};
-      if (screen !== 'editor') window.RenderGuard.rajzol(render, 'arajanlat');
+      if (screen !== 'editor' && screen !== 'teljesites') window.RenderGuard.rajzol(render, 'arajanlat');
       window.DashboardStats?.refresh();
     });
   }
@@ -813,10 +829,15 @@
   window.ArajanlatModule = { init };
   window.ModuleNav = window.ModuleNav || {};
   window.ModuleNav.arajanlat = {
-    isDetail: () => screen === 'editor' || screen === 'tipus',
+    isDetail: () => screen === 'editor' || screen === 'tipus' || screen === 'teljesites',
     goToList: () => {
       // Lépcsőzetes vissza: szerkesztő → típus lista → főoldal
-      if (screen === 'editor') { saveFormStateNow(); screen = 'tipus'; formState = null; }
+      if (screen === 'teljesites') {
+        // A Teljesítés ág maga dönti el, hogy még van-e hova visszalépnie
+        if (window.TeljesitesModul?.vissza()) { window.AppAnim?.ujra(); return; }
+        screen = 'list';
+      }
+      else if (screen === 'editor') { saveFormStateNow(); screen = 'tipus'; formState = null; }
       else { screen = 'list'; activeTipus = null; }
       render();
       window.AppAnim?.ujra();

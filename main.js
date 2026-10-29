@@ -61,7 +61,7 @@ ipcMain.handle('app:save-quote-pdf', async (event, { html, suggestedName }) => {
   let tempFajl = null;
   try {
     const mentes = await dialog.showSaveDialog(mainWindow, {
-      title: 'Árajánlat mentése PDF-be',
+      title: 'Mentés PDF-be',
       defaultPath: path.join(app.getPath('documents'), suggestedName || 'arajanlat.pdf'),
       filters: [{ name: 'PDF dokumentum', extensions: ['pdf'] }]
     });

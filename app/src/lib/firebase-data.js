@@ -381,6 +381,29 @@ function arajanlatDelete(id) {
   return removeAt(`${ARAJANLAT_PATH}/${id}`);
 }
 
+// ── TELJESÍTÉSI IGAZOLÁSOK ──────────────────────────────────────────────
+// A megrendelők (jelenleg a Pipelife) minden számla mellé kérnek egy
+// teljesítési igazolást. Ugyanúgy egyben írjuk a rekordot, mint az
+// árajánlatokat.
+const TELJESITES_PATH = 'teljesitesek';
+
+function watchTeljesitesek(callback) {
+  return watchPath(TELJESITES_PATH, callback);
+}
+
+function teljesitesAdd(record) {
+  const id = pushId(TELJESITES_PATH);
+  return writeAt(`${TELJESITES_PATH}/${id}`, record).then(() => id);
+}
+
+function teljesitesWrite(id, record) {
+  return writeAt(`${TELJESITES_PATH}/${id}`, record);
+}
+
+function teljesitesDelete(id) {
+  return removeAt(`${TELJESITES_PATH}/${id}`);
+}
+
 // ── TO-DO ───────────────────────────────────────────────────────────────
 // Szerkezet: todo/<szekcioId>/ { name, order, tasks/<taskId>/ {...} }
 const TODO_PATH = 'todo';
@@ -647,6 +670,7 @@ const BACKUP_PATHS = [
   { path: 'arajanlatok',        label: 'Árajánlatok' },
   { path: 'arajanlat_profiles', label: 'Árajánlat - kibocsátói profilok' },
   { path: 'arajanlat_ugyfelek', label: 'Árajánlat - mentett ügyfelek' },
+  { path: 'teljesitesek',       label: 'Teljesítési igazolások' },
   { path: 'todo',               label: 'TO-DO' },
   { path: 'dokumentumok',       label: 'Dokumentumok' },
   { path: 'raktar_kepek',       label: 'Alkatrész-képek' },
@@ -793,6 +817,10 @@ window.DataLayer = {
   arajanlatAdd,
   arajanlatWrite,
   arajanlatDelete,
+  watchTeljesitesek,
+  teljesitesAdd,
+  teljesitesWrite,
+  teljesitesDelete,
   watchTodo,
   todoSectionAdd,
   todoSectionUpdate,
